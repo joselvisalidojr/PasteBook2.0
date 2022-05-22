@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace PasteBook.WebApi.Services
 {
-    public class InfiniteScrollService<T> where T : BaseEntity
+    public class InfiniteScrollService<T> where T : class
     {
         public IEnumerable<T> GetScrollItems(int pageNumber, int itemsPerScroll, IEnumerable<T> items)
         {

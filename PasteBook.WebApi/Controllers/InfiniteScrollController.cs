@@ -1,25 +1,197 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PasteBook.Data;
+using PasteBook.Data.DataTransferObjects;
+using PasteBook.Data.Models;
+using PasteBook.WebApi.Services;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PasteBook.WebApi.Controllers
 {
-    [ApiController]
     [Route("infinite-scroll")]
-    public class InfiniteScrollController : ControllerBase
+    [ApiController]
+    public class InfiniteScrollPostController : ControllerBase
     {
-        public IUnitOfWork UnitOfWork { get; private set; }
-        public InfiniteScrollController(IUnitOfWork unitOfWork)
+        private readonly IUnitOfWork UnitOfWork;
+        private readonly InfiniteScrollService<Post> infiniteScrollService;
+        private readonly InfiniteScrollService<PostDTO> infiniteScrollServiceDTO;
+        public InfiniteScrollPostController(IUnitOfWork unitOfWork)
         {
-            UnitOfWork = unitOfWork;
+            this.UnitOfWork = unitOfWork;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetNewsfeedPost([FromQuery] int pageNumber, int itemsPerScroll)
+        [HttpGet("get-posts-wall")]
+        public async Task<IActionResult> GetPostsWall(int id, int pageNumber, int itemsPerScroll)
         {
-            var posts = await this.UnitOfWork.PostRepository.InfiniteScrollList(pageNumber, itemsPerScroll);
-            return Ok(posts);
+            var posts = await this.UnitOfWork.PostRepository.FindByUserAccountId(id);
+            var infiniteScrollPost = this.infiniteScrollService.GetScrollItems(pageNumber, itemsPerScroll, posts);
+            if (infiniteScrollPost != null)
+            {
+                var postDTO = new List<PostDTO>();
+                foreach (var post in infiniteScrollPost)
+                {
+                    var userAccount = await UnitOfWork.UserAccountRepository.FindByPrimaryKey(post.UserAccountId);
+                    postDTO.Add(new PostDTO
+                    {
+                        Id = post.Id,
+                        UserAccountId = post.UserAccountId,
+
+                        FirstName = userAccount.FirstName,
+                        LastName = userAccount.LastName,
+                        UserName = userAccount.UserName,
+                        Active = userAccount.Active,
+                        ProfileImagePath = userAccount.ProfileImagePath,
+                        CoverImagePath = userAccount.CoverImagePath,
+
+                        Visibility = post.Visibility,
+                        TextContent = post.TextContent,
+                        PostCreatedDate = post.CreatedDate,
+                        AlbumId = post.AlbumId
+                    });
+                }
+                return Ok(postDTO);
+            }
+            return BadRequest();
+        }
+
+        [HttpGet("get-posts-timeline")]
+        public async Task<IActionResult> GetPostsTimeline(int id, int pageNumber, int itemsPerScroll)
+        {
+            var postDTO = new List<PostDTO>();
+
+            //get users posts
+            var posts = await this.UnitOfWork.PostRepository.FindByUserAccountId(id);
+            if (posts != null)
+            {
+                foreach (var post in posts)
+                {
+                    var userAccount = await UnitOfWork.UserAccountRepository.FindByPrimaryKey(post.UserAccountId);
+                    postDTO.Add(new PostDTO
+                    {
+                        Id = post.Id,
+                        UserAccountId = post.UserAccountId,
+
+                        FirstName = userAccount.FirstName,
+                        LastName = userAccount.LastName,
+                        UserName = userAccount.UserName,
+                        Active = userAccount.Active,
+                        ProfileImagePath = userAccount.ProfileImagePath,
+                        CoverImagePath = userAccount.CoverImagePath,
+
+                        Visibility = post.Visibility,
+                        TextContent = post.TextContent,
+                        PostCreatedDate = post.CreatedDate,
+                        AlbumId = post.AlbumId
+                    });
+                }
+            }
+            //get friends post
+            var friendListData = await this.UnitOfWork.FriendRepository.FindByUserAccountId(id);
+            if (friendListData != null)
+            {
+                var accountId = 0;
+                foreach (var friend in friendListData)
+                {
+                    if (friend.UserAccountId == id)
+                    {
+                        accountId = friend.FriendAccountId;
+                    }
+                    else
+                    {
+                        accountId = friend.UserAccountId;
+                    }
+
+                    var friendsPosts = await this.UnitOfWork.PostRepository.FindByUserAccountId(accountId);
+                    if (friendsPosts != null)
+                    {
+                        foreach (var post in friendsPosts)
+                        {
+                            var FriendAccount = await UnitOfWork.UserAccountRepository.FindByPrimaryKey(post.UserAccountId);
+                            postDTO.Add(new PostDTO
+                            {
+                                Id = post.Id,
+                                UserAccountId = post.UserAccountId,
+
+                                FirstName = FriendAccount.FirstName,
+                                LastName = FriendAccount.LastName,
+                                UserName = FriendAccount.UserName,
+                                Active = FriendAccount.Active,
+                                ProfileImagePath = FriendAccount.ProfileImagePath,
+                                CoverImagePath = FriendAccount.CoverImagePath,
+
+                                Visibility = post.Visibility,
+                                TextContent = post.TextContent,
+                                PostCreatedDate = post.CreatedDate,
+                                AlbumId = post.AlbumId
+                            });
+                        }
+                    }
+                }
+            }
+            if (postDTO.Count > 0)
+            {
+                var infiniteScrollPost = this.infiniteScrollServiceDTO.GetScrollItems(pageNumber, itemsPerScroll, postDTO);
+                return Ok(infiniteScrollPost);
+            }
+            return BadRequest();
+        }
+
+        [HttpPost("new-post")]
+        public async Task<IActionResult> NewPost([FromBody] NewPostDTO newPostDTO)
+        {
+            var newPost = new Post()
+            {
+                UserAccountId = newPostDTO.UserAccountId,
+                Visibility = newPostDTO.Visibility,
+                TextContent = newPostDTO.TextContent,
+                CreatedDate = DateTime.Now,
+                AlbumId = newPostDTO.AlbumId
+            };
+
+            await this.UnitOfWork.PostRepository.Insert(newPost);
+            await this.UnitOfWork.CommitAsync();
+            return Ok(newPost);
+        }
+
+        [HttpDelete("delete-post")]
+        public async Task<IActionResult> DeletePost(int postId)
+        {
+            ////delete likes
+            //var likes = await this.UnitOfWork.LikeRepository.FindByPostId(postId);
+            //if (likes != null)
+            //{
+            //    foreach (var like in likes)
+            //    {
+            //        await this.UnitOfWork.LikeRepository.Delete(like.Id);
+            //    }
+            //}
+
+            ////delete likes notifications
+            //var likesNotification = await this.UnitOfWork.NotificationRepository.(postId);
+            //if (likesNotification != null)
+            //{
+            //    foreach (var likeNotif in likesNotification)
+            //    {
+            //        await this.UnitOfWork.LikeRepository.Delete(likeNotif.Id);
+            //    }
+            //}
+
+            ////delete comments
+            //var comments = await this.UnitOfWork.CommentRepository.FindByPostId(postId);
+            //if (comments != null)
+            //{
+            //    foreach (var comment in comments)
+            //    {
+            //        await this.UnitOfWork.LikeRepository.Delete(comment.Id);
+            //    }
+            //}
+
+            //delete post
+            var deletedPost = await this.UnitOfWork.PostRepository.Delete(postId);
+            await this.UnitOfWork.CommitAsync();
+            return Ok(deletedPost);
         }
     }
 }
