@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 namespace PasteBook.WebApi.Controllers
 {
-    // to be revised
     [ApiController]
     [Route("infinite-scroll")]
     public class InfiniteScrollController : ControllerBase
@@ -16,20 +15,11 @@ namespace PasteBook.WebApi.Controllers
             UnitOfWork = unitOfWork;
         }
 
-        //[HttpGet("GetUserAccounts")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //public async Task<IActionResult> GetUserAccounts([FromQuery] int pageNumber, int itemsPerScroll)
-        //{
-        //    var userAccounts = await UnitOfWork.UserAccountRepository.InfiniteScrollList(pageNumber, itemsPerScroll);
-        //    return Ok(userAccounts);
-        //}
-
-        //[HttpGet("GetUserAccountsWithScrollInfo")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //public async Task<IActionResult> GetUserAccountsWithScrollInfo([FromQuery] int pageNumber, int itemsPerScroll)
-        //{
-        //    var userAccounts = await UnitOfWork.UserAccountRepository.InfiniteScrollListWithInfo(pageNumber, itemsPerScroll);
-        //    return Ok(userAccounts);
-        //}
+        [HttpGet]
+        public async Task<IActionResult> GetNewsfeedPost([FromQuery] int pageNumber, int itemsPerScroll)
+        {
+            var posts = await this.UnitOfWork.PostRepository.InfiniteScrollList(pageNumber, itemsPerScroll);
+            return Ok(posts);
+        }
     }
 }
