@@ -13,6 +13,7 @@ namespace PasteBook.Data.Repositories
         Task<IEnumerable<Notification>> FindByFriendRequestId(int id);
         Task<IEnumerable<Notification>> FindByLikesId(int id);
         Task<IEnumerable<Notification>> FindByCommentId(int id);
+        Task<IEnumerable<Notification>> FindByUserId(int id);
     }
     public class NotificationRepository : GenericRepository<Notification>, INotificationRepository
     {
@@ -41,6 +42,15 @@ namespace PasteBook.Data.Repositories
         public async Task<IEnumerable<Notification>> FindByCommentId(int id)
         {
             var notifications = await this.Context.Notifications.Where(x => x.CommentId == id).ToListAsync();
+            if (notifications != null)
+            {
+                return notifications;
+            }
+            return null;
+        }
+        public async Task<IEnumerable<Notification>> FindByUserId(int id)
+        {
+            var notifications = await this.Context.Notifications.Where(x => x.UserAccountId == id).ToListAsync();
             if (notifications != null)
             {
                 return notifications;
