@@ -9,6 +9,10 @@ namespace PasteBook.WebApi.Services
     {
         public IEnumerable<T> GetScrollItems(int pageNumber, int itemsPerScroll, IEnumerable<T> items)
         {
+            if(items.Count() <= 10)
+            {
+                return items;
+            }
             return items.Take(pageNumber * itemsPerScroll).ToList();
         }
     }
