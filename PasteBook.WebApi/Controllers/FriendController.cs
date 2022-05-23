@@ -180,5 +180,32 @@ namespace PasteBook.WebApi.Controllers
             }
             return BadRequest();
         }
+
+        [HttpGet("get-friend-request-by-userid")]
+        public async Task<IActionResult> GetFriendRequestByUserId(int userId)
+        {
+            var friendRequest = await this.UnitOfWork.FriendRequestRepository.FindByRequestReceiverId(userId);
+            if (friendRequest != null)
+            {
+                var friendRequestDTO = new List<userFriendRequestDTO>();
+                foreach (var friendReq in friendRequest)
+                {
+                    var user = await this.UnitOfWork.UserAccountRepository.FindByPrimaryKey(friendReq.RequestSenderId);
+                    friendRequestDTO.Add(new userFriendRequestDTO
+                    {
+                        Id = friendReq.Id,
+                        RequestReceiverId = friendReq.RequestReceiverId,
+                        RequestSenderId = friendReq.RequestSenderId,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Active = user.Active,
+                        ProfileImagePath = user.ProfileImagePath,
+                        requestDate = friendReq.RequestDate
+                    });
+                }
+                return Ok(friendRequestDTO);
+            }
+            return BadRequest();
+        }
     }
 }

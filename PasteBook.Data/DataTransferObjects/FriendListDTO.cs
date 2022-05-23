@@ -29,4 +29,17 @@ namespace PasteBook.Data.DataTransferObjects
         public int RequestReceiverId { get; set; }
         public int RequestSenderId { get; set; }
     }
+
+    public class userFriendRequestDTO
+    {
+        public int Id { get; set; }
+        public int RequestReceiverId { get; set; }
+        public int RequestSenderId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public bool Active { get; set; }
+        public string? ProfileImagePath { get; set; }
+        public DateTime? requestDate { get; set; }
+    }
+
 }

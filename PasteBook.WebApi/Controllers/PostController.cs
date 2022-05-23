@@ -49,7 +49,7 @@ namespace PasteBook.WebApi.Controllers
                         AlbumId = post.AlbumId,
                         LikesCount = likes.ToList().Count,
                         CommentsCount = comments.ToList().Count
-                    }); ;
+                    });
                 }
                 return Ok(postDTO);
             }
