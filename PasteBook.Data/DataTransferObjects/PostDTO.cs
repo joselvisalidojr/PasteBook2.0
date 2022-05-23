@@ -23,6 +23,9 @@ namespace PasteBook.Data.DataTransferObjects
         public string TextContent { get; set; }
         public DateTime PostCreatedDate { get; set; }
         public int? AlbumId { get; set; }
+
+        public int LikesCount { get; set; }
+        public int CommentsCount { get; set; }
     }
 
     public class NewPostDTO

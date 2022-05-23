@@ -97,6 +97,7 @@ namespace PasteBook.WebApi.Controllers
         }
 
         [HttpPost("friend-request")]
+        [Authorize]
         public async Task<IActionResult> FriendRequest([FromBody] FriendRequestDTO FriendRequest)
         {
             var friendRequest = new FriendRequest()
@@ -167,6 +168,17 @@ namespace PasteBook.WebApi.Controllers
             var addFriend = await this.UnitOfWork.FriendRepository.Insert(newFriend);
             await this.UnitOfWork.CommitAsync();
             return Ok(addFriend);
+        }
+
+        [HttpGet("check-if-friend")]
+        public async Task<IActionResult> CheckIfFriend(int userId, int friendId)
+        {
+            var friend = await this.UnitOfWork.FriendRepository.FindByUserAccountIds(userId, friendId);
+            if (friend != null)
+            {
+                return Ok(friend);
+            }
+            return BadRequest();
         }
     }
 }

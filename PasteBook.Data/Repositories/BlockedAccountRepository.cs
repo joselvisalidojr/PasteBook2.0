@@ -12,6 +12,7 @@ namespace PasteBook.Data.Repositories
     {
         Task<IEnumerable<BlockedAccount>> FindByBlockerAccountId(int id);
         Task<IEnumerable<BlockedAccount>> FindByBlockedAccountId(int id);
+        Task<BlockedAccount> FindByAccountIds(int blockerId, int blockedId);
     }
     public class BlockedAccountRepository : GenericRepository<BlockedAccount>, IBlockedAccountRepository
     {
@@ -30,6 +31,16 @@ namespace PasteBook.Data.Repositories
         public async Task<IEnumerable<BlockedAccount>> FindByBlockedAccountId(int id)
         {
             var blockedAccounts = await this.Context.BlockedAccounts.Where(x => x.BlockedAccountId == id).ToListAsync();
+            if (blockedAccounts != null)
+            {
+                return blockedAccounts;
+            }
+            return null;
+        }
+
+        public async Task<BlockedAccount> FindByAccountIds(int blockerId, int blockedId)
+        {
+            var blockedAccounts = await this.Context.BlockedAccounts.Where(x => x.BlockerAccountId == blockerId && x.BlockedAccountId == blockedId).FirstOrDefaultAsync();
             if (blockedAccounts != null)
             {
                 return blockedAccounts;

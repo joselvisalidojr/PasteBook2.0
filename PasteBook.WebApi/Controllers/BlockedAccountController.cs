@@ -74,5 +74,16 @@ namespace PasteBook.WebApi.Controllers
             await this.UnitOfWork.CommitAsync();
             return Ok(unblockAccount);
         }
+
+        [HttpGet("check-if-blocked")]
+        public async Task<IActionResult> CheckIfBlocked(int blockerId, int blockedId)
+        {
+            var blockedUser = await this.UnitOfWork.BlockedAccountRepository.FindByAccountIds(blockerId, blockedId);
+            if (blockedUser != null)
+            {
+                return Ok(blockedUser);
+            }
+            return BadRequest();
+        }
     }
 }
