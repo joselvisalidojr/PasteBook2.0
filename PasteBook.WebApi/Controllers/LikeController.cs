@@ -46,6 +46,32 @@ namespace PasteBook.WebApi.Controllers
             }
             return NotFound(null);
         }
+        [HttpGet("get-likes-by-useraccountid")]
+        public async Task<IActionResult> GetLikesByUserId(int id)
+        {
+            var likes = await this.UnitOfWork.LikeRepository.FindByLikerId(id);
+
+            if (likes != null)
+            {
+                var likesDTO = new List<LikeDTO>();
+                foreach (var like in likes)
+                {
+                    var LikerAccount = await UnitOfWork.UserAccountRepository.FindByPrimaryKey(like.LikerAccountId);
+                    likesDTO.Add(new LikeDTO
+                    {
+                        Id = like.Id,
+                        PostId = like.PostId,
+                        LikerAccountId = like.LikerAccountId,
+                        FirstName = LikerAccount.FirstName,
+                        LastName = LikerAccount.LastName,
+                        Active = LikerAccount.Active,
+                        ProfileImagePath = LikerAccount.ProfileImagePath
+                    });
+                }
+                return Ok(likesDTO);
+            }
+            return NotFound(null);
+        }
 
         [HttpPost("new-like")]
         public async Task<IActionResult> AddNewLike([FromBody] NewLikeDTO newLikeDTO)
@@ -97,6 +123,17 @@ namespace PasteBook.WebApi.Controllers
             await this.UnitOfWork.CommitAsync();
 
             return Ok(like);
+        }
+
+        [HttpGet("check-like-status")]
+        public async Task<IActionResult> CheckLikeStatus(int postId, int userId)
+        {
+            var like = await this.UnitOfWork.LikeRepository.FindByPostAndUserId(postId, userId);
+            if (like != null)
+            {
+                return Ok(like);
+            }
+            return BadRequest();
         }
     }
 }

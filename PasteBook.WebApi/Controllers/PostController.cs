@@ -4,6 +4,7 @@ using PasteBook.Data.DataTransferObjects;
 using PasteBook.Data.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PasteBook.WebApi.Controllers
@@ -28,6 +29,8 @@ namespace PasteBook.WebApi.Controllers
                 foreach (var post in posts)
                 {
                     var userAccount = await UnitOfWork.UserAccountRepository.FindByPrimaryKey(post.UserAccountId);
+                    var likes = await this.UnitOfWork.LikeRepository.FindByPostId(post.Id);
+                    var comments = await this.UnitOfWork.CommentRepository.FindByPostId(post.Id);
                     postDTO.Add(new PostDTO
                     {
                         Id = post.Id,
@@ -43,8 +46,10 @@ namespace PasteBook.WebApi.Controllers
                         Visibility = post.Visibility,
                         TextContent = post.TextContent,
                         PostCreatedDate = post.CreatedDate,
-                        AlbumId = post.AlbumId
-                    });
+                        AlbumId = post.AlbumId,
+                        LikesCount = likes.ToList().Count,
+                        CommentsCount = comments.ToList().Count
+                    }); ;
                 }
                 return Ok(postDTO);
             }
@@ -63,6 +68,8 @@ namespace PasteBook.WebApi.Controllers
                 foreach (var post in posts)
                 {
                     var userAccount = await UnitOfWork.UserAccountRepository.FindByPrimaryKey(post.UserAccountId);
+                    var likes = await this.UnitOfWork.LikeRepository.FindByPostId(post.Id);
+                    var comments = await this.UnitOfWork.CommentRepository.FindByPostId(post.Id);
                     postDTO.Add(new PostDTO
                     {
                         Id = post.Id,
@@ -78,7 +85,9 @@ namespace PasteBook.WebApi.Controllers
                         Visibility = post.Visibility,
                         TextContent = post.TextContent,
                         PostCreatedDate = post.CreatedDate,
-                        AlbumId = post.AlbumId
+                        AlbumId = post.AlbumId,
+                        LikesCount = likes.ToList().Count,
+                        CommentsCount = comments.ToList().Count
                     });
                 }
             }
@@ -104,6 +113,8 @@ namespace PasteBook.WebApi.Controllers
                         foreach (var post in friendsPosts)
                         {
                             var FriendAccount = await UnitOfWork.UserAccountRepository.FindByPrimaryKey(post.UserAccountId);
+                            var likes = await this.UnitOfWork.LikeRepository.FindByPostId(post.Id);
+                            var comments = await this.UnitOfWork.CommentRepository.FindByPostId(post.Id);
                             postDTO.Add(new PostDTO
                             {
                                 Id = post.Id,
@@ -119,7 +130,10 @@ namespace PasteBook.WebApi.Controllers
                                 Visibility = post.Visibility,
                                 TextContent = post.TextContent,
                                 PostCreatedDate = post.CreatedDate,
-                                AlbumId = post.AlbumId
+                                AlbumId = post.AlbumId,
+
+                                LikesCount = likes.ToList().Count,
+                                CommentsCount = comments.ToList().Count
                             });
                         }
                     }
